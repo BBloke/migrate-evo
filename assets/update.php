@@ -1,9 +1,20 @@
 <?php
+
+use Illuminate\Database\Schema\Blueprint;
+
+$lang_array = ['ukrainian' => 'uk',
+    'svenska' => 'sv', 'svenska-utf8' => 'sv', 'spanish' => 'es', 'spanish-utf8' => 'es', 'simple_chinese-gb2312' => 'zh', 'simple_chinese-gb2312-utf8' => 'zh',
+    'russian' => 'ru', 'russian-UTF8' => 'ru', 'portuguese' => 'pt', 'portuguese-br' => 'pt-br', 'portuguese-br-utf8' => 'pt-br',
+    'polish' => 'pl', 'polish-utf8' => 'pl', 'persian' => 'fa', 'norsk' => 'no', 'nederlands' => 'nl', 'nederlands-utf8' => 'nl',
+    'japanese-utf8' => 'ja', 'italian' => 'it', 'hebrew' => 'he', 'german' => 'de', 'francais' => 'fr', 'francais-utf8' => 'fr',
+    'finnish' => 'fi', 'english' => 'en', 'english-british' => 'en', 'danish' => 'da', 'czech' => 'cs', 'chinese' => 'zh', 'bulgarian' => 'bz'];
 chdir('../');
 $base_dir = getcwd();
 $temp_dir = $base_dir . '/_temp' . md5(time());
 $config_2_dir = $base_dir . '/core/config/database/connections/default.php';
 $database_engine = 'MyISAM';
+
+EvoInstaller::checkVersion($base_dir);
 $config = EvoInstaller::checkConfig($base_dir, $config_2_dir, $database_engine);
 
 //run unzip and install
@@ -21,11 +32,17 @@ if ($handle = opendir($temp_dir)) {
     }
     closedir($handle);
 }
+
 EvoInstaller::rmdirs($base_dir . '/manager');
 EvoInstaller::rmdirs($base_dir . '/vendor');
-unlink($base_dir . '/assets/cache/siteCache.idx.php');
+if (file_exists($base_dir . '/assets/cache/siteCache.idx.php'))
+    unlink($base_dir . '/assets/cache/siteCache.idx.php');
+if (file_exists($base_dir . '/core/storage/bootstrap/siteCache.idx.php'))
+    unlink($base_dir . '/core/storage/bootstrap/siteCache.idx.php');
+if (file_exists($base_dir . '/assets/cache/siteManager.php'))
+    unlink($base_dir . '/assets/cache/siteManager.php');
 EvoInstaller::moveFiles($temp_dir . '/' . $dir, $base_dir . '/');
-if($config != ''){
+if ($config != '') {
     file_put_contents($config_2_dir, $config);
 }
 EvoInstaller::rmdirs($temp_dir);
@@ -33,20 +50,14 @@ EvoInstaller::rmdirs($temp_dir);
 unlink(__FILE__);
 
 
-use Illuminate\Database\Schema\Blueprint;
-
-define('IN_MANAGER_MODE', true);
+define('MODX_CLI', true);
 define('IN_INSTALL_MODE', true);
 define('MODX_API_MODE', true);
 include 'index.php';
 
 $modx = EvolutionCMS();
 
-//$version = $modx->getVersionData();
-//if (version_compare($version['version'], '2.0.3', '<')) {
-//    echo 'Please update to version 2.0.3 before start this script';
-//    exit();
-//}
+
 try {
     $dbh = new \PDO($modx->getDatabase()->getConfig('driver') . ':host=' . $modx->getDatabase()->getConfig('host') . ';dbname=' . $modx->getDatabase()->getConfig('database'), $modx->getDatabase()->getConfig('username'), $modx->getDatabase()->getConfig('password'));
 } catch (PDOException $exception) {
@@ -62,7 +73,14 @@ if (stristr($serverVersion, 'MySQL'))
         echo '<span class="notok">Need minimum MySQL 5.6 version</span>';
         exit();
     }
-
+$setting_lang = \DB::table('system_settings')->where('setting_name', 'manager_language')->first();
+if (isset($lang_array[$setting_lang->setting_value])) {
+    \DB::table('system_settings')->where('setting_name', 'manager_language')->update(['setting_value'=>$lang_array[$setting_lang->setting_value]]);
+}
+$setting_lang = \DB::table('system_settings')->where('setting_name', 'fe_editor_lang')->first();
+if (isset($lang_array[$setting_lang->setting_value])) {
+    \DB::table('system_settings')->where('setting_name', 'fe_editor_lang')->update(['setting_value'=>$lang_array[$setting_lang->setting_value]]);
+}
 $username = \DB::table('manager_users')->pluck('username');
 $emails = \DB::table('user_attributes')->pluck('email');
 $checkUsername = \DB::table('web_users')->whereIn('username', $username);
@@ -432,11 +450,11 @@ if ($cnt == 0) {
             ),
     ));
 }
-file_put_contents($base_dir.'/core/.install', time());
+file_put_contents($base_dir . '/core/.install', time());
 
 header('Location: /install/');
-//echo "Site ready to update, please download latest version from github and unpack to server";
 
+//echo "Site ready to update, please download latest version from github and unpack to server";
 
 
 class EvoInstaller
@@ -490,6 +508,27 @@ class EvoInstaller
         }
     }
 
+    static public function checkVersion($base_dir)
+    {
+        if (file_exists($base_dir . '/core/factory/version.php')) {
+            $data = include $base_dir . '/core/factory/version.php';
+            if (version_compare($data['version'], '2.0.4', '<')) {
+                echo 'Please update to version 2.0.4 before start this script';
+                exit();
+            } else {
+                return;
+            }
+
+        }
+        if (file_exists($base_dir . '/manager/includes/version.inc.php')) {
+            include $base_dir . '/manager/includes/version.inc.php';
+            if (version_compare($modx_version, '1.4.12', '<')) {
+                echo 'Please update to version 1.4.12 before start this script';
+                exit();
+            }
+        }
+    }
+
     static public function checkConfig($base_dir, $config_2_dir, $database_engine)
     {
         if (file_exists($config_2_dir)) {
@@ -502,13 +541,13 @@ class EvoInstaller
         }
         include $config_file_1_4;
         $database_connection_charset_ = 'utf8_general_ci';
-        if($database_connection_charset == 'utf8') {
+        if ($database_connection_charset == 'utf8') {
             $database_connection_charset_ = 'utf8_general_ci';
         }
-        if($database_connection_charset == 'utf8mb4') {
+        if ($database_connection_charset == 'utf8mb4') {
             $database_connection_charset_ = 'utf8mb4_general_ci';
         }
-        if($database_connection_charset == 'cp1251') {
+        if ($database_connection_charset == 'cp1251') {
             $database_connection_charset_ = 'cp1251_general_ci';
         }
         $arr_config['[+database_type+]'] = 'mysql';
