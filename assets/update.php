@@ -37,10 +37,12 @@ EvoInstaller::rmdirs($base_dir . '/manager');
 EvoInstaller::rmdirs($base_dir . '/vendor');
 if (file_exists($base_dir . '/assets/cache/siteCache.idx.php'))
     unlink($base_dir . '/assets/cache/siteCache.idx.php');
-if (file_exists($base_dir . '/core/storage/bootstrap/siteCache.idx.php'))
+if (file_exists($base_dir . '/core/storage/bootstrap/siteCache.idx.php')){
     unlink($base_dir . '/core/storage/bootstrap/siteCache.idx.php');
-if (file_exists($base_dir . '/assets/cache/siteManager.php'))
+}
+if (file_exists($base_dir . '/assets/cache/siteManager.php')) {
     unlink($base_dir . '/assets/cache/siteManager.php');
+}
 EvoInstaller::moveFiles($temp_dir . '/' . $dir, $base_dir . '/');
 if ($config != '') {
     file_put_contents($config_2_dir, $config);
@@ -50,6 +52,7 @@ EvoInstaller::rmdirs($temp_dir);
 unlink(__FILE__);
 
 
+define('MANAGER_MODE', true);
 define('MODX_CLI', true);
 define('IN_INSTALL_MODE', true);
 define('MODX_API_MODE', true);
@@ -75,11 +78,11 @@ if (stristr($serverVersion, 'MySQL'))
     }
 $setting_lang = \DB::table('system_settings')->where('setting_name', 'manager_language')->first();
 if (isset($lang_array[$setting_lang->setting_value])) {
-    \DB::table('system_settings')->where('setting_name', 'manager_language')->update(['setting_value'=>$lang_array[$setting_lang->setting_value]]);
+    \DB::table('system_settings')->where('setting_name', 'manager_language')->update(['setting_value' => $lang_array[$setting_lang->setting_value]]);
 }
 $setting_lang = \DB::table('system_settings')->where('setting_name', 'fe_editor_lang')->first();
 if (isset($lang_array[$setting_lang->setting_value])) {
-    \DB::table('system_settings')->where('setting_name', 'fe_editor_lang')->update(['setting_value'=>$lang_array[$setting_lang->setting_value]]);
+    \DB::table('system_settings')->where('setting_name', 'fe_editor_lang')->update(['setting_value' => $lang_array[$setting_lang->setting_value]]);
 }
 $username = \DB::table('manager_users')->pluck('username');
 $emails = \DB::table('user_attributes')->pluck('email');
@@ -163,6 +166,7 @@ foreach ($userGroups as $key => $group) {
 $newAccess = [];
 $oldWebGroupAccess = \DB::table('webgroup_access')->get();
 foreach ($oldWebGroupAccess as $access) {
+    $access = (array)$access;
     $newAccess[] = ['membergroup' => $oldNewGroup[$access['webgroup']], 'documentgroup' => $access['documentgroup']];
 }
 foreach ($newAccess as $access)
@@ -171,6 +175,7 @@ foreach ($newAccess as $access)
 $newWebGroupsUsers = [];
 $oldWebGroupsUsers = \DB::table('web_groups')->get();
 foreach ($oldWebGroupsUsers as $user) {
+    $user = (array)$user;
     $newWebGroupsUsers[] = ['user_group' => $oldNewGroup[$user['webgroup']], 'member' => $user['webuser']];
 }
 foreach ($newWebGroupsUsers as $user) {
