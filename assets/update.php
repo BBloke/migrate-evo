@@ -136,10 +136,12 @@ foreach ($users as $user) {
     \DB::table('web_user_attributes')->insert($userAttributes);
     $arraySetting = [];
     foreach ($userSettings as $setting) {
+        $setting = (array)$setting;
         $setting['user'] = $id;
         $arraySetting[] = $setting;
     }
     foreach ($userMemberGroup as $group) {
+        $group = (array)$group;
         $group['member'] = $id;
         \DB::table('member_groups')->insert($group);
     }
