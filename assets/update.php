@@ -137,7 +137,7 @@ foreach ($users as $user) {
     $arraySetting = [];
     foreach ($userSettings as $setting) {
         $setting = (array)$setting;
-        $setting['user'] = $id;
+        $setting['webuser'] = $id;
         $arraySetting[] = $setting;
     }
     foreach ($userMemberGroup as $group) {
@@ -150,7 +150,20 @@ foreach ($users as $user) {
     \DB::table('web_user_settings')->where('webuser', $oldId)->delete();
 
     foreach ($arraySetting as $setting)
-        \DB::table('user_settings')->insert($setting);
+        \DB::table('web_user_settings')->insert($setting);
+
+
+}
+
+\DB::table('user_settings')->delete();
+
+$userSettings = \DB::table('web_user_settings')->get();
+foreach ($userSettings as $setting) {
+    $setting = (array)$setting;
+    $setting['user'] = $setting['webuser'] ;
+    unset($setting['webuser']);
+    \DB::table('user_settings')->insert($setting);
+
 }
 
 $managerGroup = \DB::table('membergroup_names')->pluck('id', 'name')->toArray();
