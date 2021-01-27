@@ -53,7 +53,9 @@ unlink(__FILE__);
 
 
 define('MANAGER_MODE', true);
-define('MODX_CLI', true);
+if (!defined('MODX_CLI')) {
+    define('MODX_CLI', true);
+}
 define('IN_INSTALL_MODE', true);
 define('MODX_API_MODE', true);
 include 'index.php';
