@@ -159,6 +159,7 @@ $userGroups = \DB::table('webgroup_names')->pluck('name', 'id')->toArray();
 
 $oldNewGroup = [];
 foreach ($userGroups as $key => $group) {
+    $group = (array)$group;
     if (isset($managerGroup[$group])) {
         $oldNewGroup[$key] = $managerGroup[$group];
     } else {
