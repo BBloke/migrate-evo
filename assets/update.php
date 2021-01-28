@@ -10,52 +10,55 @@ $lang_array = ['ukrainian' => 'uk',
     'finnish' => 'fi', 'english' => 'en', 'english-british' => 'en', 'danish' => 'da', 'czech' => 'cs', 'chinese' => 'zh', 'bulgarian' => 'bz'];
 chdir('../');
 $base_dir = getcwd();
-$temp_dir = $base_dir . '/_temp' . md5(time());
-$config_2_dir = $base_dir . '/core/config/database/connections/default.php';
-$database_engine = 'MyISAM';
 
-EvoInstaller::checkVersion($base_dir);
-$config = EvoInstaller::checkConfig($base_dir, $config_2_dir, $database_engine);
+if (!isset($_GET['step'])) {
+
+    $temp_dir = $base_dir . '/_temp' . md5(time());
+    $config_2_dir = $base_dir . '/core/config/database/connections/default.php';
+    $database_engine = 'MyISAM';
+
+    EvoInstaller::checkVersion($base_dir);
+    $config = EvoInstaller::checkConfig($base_dir, $config_2_dir, $database_engine);
 
 //run unzip and install
-EvoInstaller::downloadFile('https://github.com/evolution-cms/evolution/archive/3.0.zip', 'evo.zip');
+    EvoInstaller::downloadFile('https://github.com/evolution-cms/evolution/archive/3.0.zip', 'evo.zip');
 
-$zip = new ZipArchive;
-$res = $zip->open($base_dir . '/evo.zip');
-$zip->extractTo($temp_dir);
-$zip->close();
-unlink($base_dir . '/evo.zip');
+    $zip = new ZipArchive;
+    $res = $zip->open($base_dir . '/evo.zip');
+    $zip->extractTo($temp_dir);
+    $zip->close();
+    unlink($base_dir . '/evo.zip');
 
-if ($handle = opendir($temp_dir)) {
-    while (false !== ($name = readdir($handle))) {
-        if ($name != '.' && $name != '..') $dir = $name;
+    if ($handle = opendir($temp_dir)) {
+        while (false !== ($name = readdir($handle))) {
+            if ($name != '.' && $name != '..') $dir = $name;
+        }
+        closedir($handle);
     }
-    closedir($handle);
-}
 
-EvoInstaller::rmdirs($base_dir . '/manager');
-EvoInstaller::rmdirs($base_dir . '/vendor');
-if (file_exists($base_dir . '/assets/cache/siteCache.idx.php'))
-    unlink($base_dir . '/assets/cache/siteCache.idx.php');
-if (file_exists($base_dir . '/core/storage/bootstrap/siteCache.idx.php')){
-    unlink($base_dir . '/core/storage/bootstrap/siteCache.idx.php');
-}
-if (file_exists($base_dir . '/assets/cache/siteManager.php')) {
-    unlink($base_dir . '/assets/cache/siteManager.php');
-}
-EvoInstaller::moveFiles($temp_dir . '/' . $dir, $base_dir . '/');
-if ($config != '') {
-    file_put_contents($config_2_dir, $config);
-}
-EvoInstaller::rmdirs($temp_dir);
+    EvoInstaller::rmdirs($base_dir . '/manager');
+    EvoInstaller::rmdirs($base_dir . '/vendor');
 
-unlink(__FILE__);
+    EvoInstaller::moveFiles($temp_dir . '/' . $dir, $base_dir . '/');
+    if ($config != '') {
+        file_put_contents($config_2_dir, $config);
+    }
+    EvoInstaller::rmdirs($temp_dir);
+    if (file_exists($base_dir . '/assets/cache/siteCache.idx.php')){
+
+        unlink($base_dir . '/assets/cache/siteCache.idx.php');
+    }
+    if (file_exists($base_dir . '/core/storage/bootstrap/siteCache.idx.php')) {
+        unlink($base_dir . '/core/storage/bootstrap/siteCache.idx.php');
+    }
+    if (file_exists($base_dir . '/assets/cache/siteManager.php')) {
+        unlink($base_dir . '/assets/cache/siteManager.php');
+    }
+    header('Location: /assets/update.php?step=2');
+}
 
 
 define('MANAGER_MODE', true);
-if (!defined('MODX_CLI')) {
-    define('MODX_CLI', true);
-}
 define('IN_INSTALL_MODE', true);
 define('MODX_API_MODE', true);
 include 'index.php';
@@ -140,6 +143,7 @@ foreach ($users as $user) {
     foreach ($userSettings as $setting) {
         $setting = (array)$setting;
         $setting['webuser'] = $id;
+        unset($setting['user']);
         $arraySetting[] = $setting;
     }
     foreach ($userMemberGroup as $group) {
@@ -162,7 +166,7 @@ foreach ($users as $user) {
 $userSettings = \DB::table('web_user_settings')->get();
 foreach ($userSettings as $setting) {
     $setting = (array)$setting;
-    $setting['user'] = $setting['webuser'] ;
+    $setting['user'] = $setting['webuser'];
     unset($setting['webuser']);
     \DB::table('user_settings')->insert($setting);
 
@@ -174,7 +178,6 @@ $userGroups = \DB::table('webgroup_names')->pluck('name', 'id')->toArray();
 
 $oldNewGroup = [];
 foreach ($userGroups as $key => $group) {
-    $group = (array)$group;
     if (isset($managerGroup[$group])) {
         $oldNewGroup[$key] = $managerGroup[$group];
     } else {
@@ -474,7 +477,7 @@ if ($cnt == 0) {
     ));
 }
 file_put_contents($base_dir . '/core/.install', time());
-
+unlink(__FILE__);
 header('Location: /install/');
 
 //echo "Site ready to update, please download latest version from github and unpack to server";
@@ -608,4 +611,5 @@ return [
 
         return $str;
     }
+
 }
