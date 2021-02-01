@@ -137,7 +137,7 @@ foreach ($users as $user) {
     unset($userAttributes['id']);
     $id = \DB::table('web_users')->insertGetId($userArray);
     $userAttributes['internalKey'] = $id;
-
+    file_put_contents($base_dir.'/assets/cache/users.txt', $oldId.'||'.$id."\n", FILE_APPEND);
     \DB::table('web_user_attributes')->insert($userAttributes);
     $arraySetting = [];
     foreach ($userSettings as $setting) {
