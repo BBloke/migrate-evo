@@ -21,7 +21,7 @@ if (!isset($_GET['step'])) {
     $config = EvoInstaller::checkConfig($base_dir, $config_2_dir, $database_engine);
 
 //run unzip and install
-    EvoInstaller::downloadFile('https://github.com/evolution-cms/evolution/archive/3.0.zip', 'evo.zip');
+    EvoInstaller::downloadFile('https://github.com/evolution-cms/evolution/archive/3.0.1.zip', 'evo.zip');
 
     $zip = new ZipArchive;
     $res = $zip->open($base_dir . '/evo.zip');
@@ -38,7 +38,9 @@ if (!isset($_GET['step'])) {
 
     EvoInstaller::rmdirs($base_dir . '/manager');
     EvoInstaller::rmdirs($base_dir . '/vendor');
-
+    if (file_exists($base_dir . '/assets/cache/siteManager.php')) {
+        unlink($base_dir . '/assets/cache/siteManager.php');
+    }
     EvoInstaller::moveFiles($temp_dir . '/' . $dir, $base_dir . '/');
     if ($config != '') {
         file_put_contents($config_2_dir, $config);
@@ -51,9 +53,7 @@ if (!isset($_GET['step'])) {
     if (file_exists($base_dir . '/core/storage/bootstrap/siteCache.idx.php')) {
         unlink($base_dir . '/core/storage/bootstrap/siteCache.idx.php');
     }
-    if (file_exists($base_dir . '/assets/cache/siteManager.php')) {
-        unlink($base_dir . '/assets/cache/siteManager.php');
-    }
+
     header('Location: /assets/update.php?step=2');
 }
 
