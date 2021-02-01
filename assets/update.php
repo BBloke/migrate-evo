@@ -117,6 +117,7 @@ if ($checkUsername->count() > 0 || $checkEmails->count() > 0) {
 }
 
 $users = \DB::table('manager_users')->get();
+file_put_contents($base_dir.'/assets/cache/users.txt', "old_user_id||new_user_id\n", FILE_APPEND);
 
 foreach ($users as $user) {
 
