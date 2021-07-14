@@ -21,7 +21,7 @@ if (!isset($_GET['step'])) {
     $config = EvoInstaller::checkConfig($base_dir, $config_2_dir, $database_engine);
 
 //run unzip and install
-    EvoInstaller::downloadFile('https://github.com/evolution-cms/evolution/archive/3.1.2.zip', 'evo.zip');
+    EvoInstaller::downloadFile('https://github.com/evolution-cms/evolution/archive/3.1.6.zip', 'evo.zip');
 
     $zip = new ZipArchive;
     $res = $zip->open($base_dir . '/evo.zip');
