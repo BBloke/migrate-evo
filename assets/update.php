@@ -150,6 +150,7 @@ foreach ($users as $user) {
     foreach ($userMemberGroup as $group) {
         $group = (array)$group;
         $group['member'] = $id;
+        unset($group['id']);
         \DB::table('member_groups')->insert($group);
     }
     \DB::table('member_groups')->where('member', $oldId)->delete();
