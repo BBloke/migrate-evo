@@ -21,7 +21,7 @@ if (!isset($_GET['step'])) {
     $config = EvoInstaller::checkConfig($base_dir, $config_2_dir, $database_engine);
 
 //run unzip and install
-    EvoInstaller::downloadFile('https://github.com/evolution-cms/evolution/archive/3.1.6.zip', 'evo.zip');
+    EvoInstaller::downloadFile('https://github.com/evolution-cms/evolution/archive/3.x.zip', 'evo.zip');
 
     $zip = new ZipArchive;
     $res = $zip->open($base_dir . '/evo.zip');
@@ -119,6 +119,8 @@ if ($checkUsername->count() > 0 || $checkEmails->count() > 0) {
 $users = \DB::table('manager_users')->get();
 file_put_contents($base_dir.'/assets/cache/users.txt', "old_user_id||new_user_id\n", FILE_APPEND);
 
+$oldidnewid = [];
+
 foreach ($users as $user) {
 
     $userArray = (array)$user;
@@ -139,6 +141,7 @@ foreach ($users as $user) {
     $id = \DB::table('web_users')->insertGetId($userArray);
     $userAttributes['internalKey'] = $id;
     file_put_contents($base_dir.'/assets/cache/users.txt', $oldId.'||'.$id."\n", FILE_APPEND);
+    $oldidnewid[$oldId] = $id;
     \DB::table('web_user_attributes')->insert($userAttributes);
     $arraySetting = [];
     foreach ($userSettings as $setting) {
@@ -199,7 +202,7 @@ $newWebGroupsUsers = [];
 $oldWebGroupsUsers = \DB::table('web_groups')->get();
 foreach ($oldWebGroupsUsers as $user) {
     $user = (array)$user;
-    $newWebGroupsUsers[] = ['user_group' => $oldNewGroup[$user['webgroup']], 'member' => $user['webuser']];
+    $newWebGroupsUsers[] = ['user_group' => $oldNewGroup[$user['webgroup']], 'member' => $oldidnewid[$user['webuser']]];
 }
 foreach ($newWebGroupsUsers as $user) {
     \DB::table('member_groups')->insert($user);
@@ -272,6 +275,7 @@ if (!Schema::hasTable('permissions_groups')) {
         $table->string('lang_key')->default('');
         $table->timestamps();
     });
+
     \DB::table('migrations_install')->insert(['migration' => '2018_06_29_182342_create_permissions_groups_table', 'batch' => 1]);
     $insertArray = [
         ['id' => 1, 'name' => 'General', 'lang_key' => 'page_data_general'],
@@ -303,6 +307,8 @@ if (!Schema::hasTable('permissions')) {
         $table->integer('disabled')->nullable();
         $table->timestamps();
     });
+
+
     \DB::table('migrations_install')->insert(['migration' => '2018_06_29_182342_create_permissions_table', 'batch' => 1]);
     $insertArray = [
         ['name' => 'Request manager frames', 'lang_key' => 'role_frames', 'key' => 'frames', 'disabled' => 1, 'group_id' => 1],
